@@ -1,14 +1,15 @@
 import IAlgorithm from "./AlgoTypes";
-import { BFS } from "./Algorithm";
+import { BFS, Random } from "./Algorithm";
 
 export default class AlgoFactory {
-  getAlgorithm(name: string): IAlgorithm | null {
+  getAlgorithm(name: string): IAlgorithm {
     switch (name) {
       case "BFS":
         return new BFS();
+      case "random":
+        return new Random();
       default:
-        return null;
+        return new Random();
     }
-    return new BFS();
   }
 }

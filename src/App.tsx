@@ -7,64 +7,87 @@ import "./main.css";
 import Menu from "./components/Menu";
 import AlgoFactory from "./Algorithms/AlgoFractory";
 import { Path, Position } from "./Algorithms/AlgoTypes";
+import { clearAllTimeout, makeGrid } from "./utils";
 
 const factory: AlgoFactory = new AlgoFactory();
 
+const timeoutIds: number[] = [];
+
+const colorLoopUp: Map<number, string> = new Map<number, string>();
+
+colorLoopUp.set(0, "white");
+colorLoopUp.set(1, "yellow");
+colorLoopUp.set(-1, "green");
+
 function App() {
-  const [grid, setGrid] = useState<Array<Array<Path>>>([]);
+  const [grid, setGrid] = useState<Array<Array<Path>>>(makeGrid());
   const [showMenu, setShowMenu] = useState<boolean>(false);
+  const [isRunning, setIsRunning] = useState<boolean>(false);
 
-  const handleClick = (item: Path, position: Position) => {
+  const handleClick = (item: Path) => {
     const c = [...grid];
-    const value = c[position.x][position.y].value;
-    c[position.x][position.y].value = value == 1 ? 0 : 1;
-
+    const value = c[item.position.x][item.position.y].value;
+    c[item.position.x][item.position.y].value = value == 1 ? 0 : 1;
     setGrid(c);
   };
 
-  useEffect(() => {
-    makeGrid(50, 50);
+  const showAnimation = (path?: Path[]) => {
+    clearAllTimeout(timeoutIds);
 
+    if (isRunning) {
+      setIsRunning((prev) => !prev);
+      return;
+    }
+
+    if (path == undefined) return;
+
+    for (let i = 1; i < path.length; i++) {
+      const previousNode = path[i - 1];
+      const timeout = setTimeout(() => {
+        const pos = path[i].position;
+
+        grid[previousNode.position.x][previousNode.position.y].value = -1;
+        grid[pos.x][pos.y].value = path[i].value;
+        setGrid([...grid]);
+      }, i * 5);
+
+      timeoutIds.push(timeout);
+    }
+    setIsRunning(true);
+  };
+
+  useEffect(() => {
     const handleKeyPressed = (e: KeyboardEvent) => {
       switch (e.key) {
         case "Escape":
           setShowMenu((showMenu) => !showMenu);
-          console.log(showMenu);
+          break;
+        case "Enter":
+          const paths: Path[] = factory.getAlgorithm("random")?.solve(grid);
+          showAnimation(paths);
+          break;
+        case "r":
+        case "R":
+          clearAllTimeout(timeoutIds);
+          setGrid([...makeGrid()]);
+          setIsRunning((prev) => !prev);
+
           break;
       }
     };
 
     window.addEventListener("keyup", handleKeyPressed);
-
     return function cleanup() {
       window.removeEventListener("keyup", handleKeyPressed);
     };
-  }, []);
-
-  const makeGrid = (width: number, height: number) => {
-    const tempGrid: Array<Array<Path>> = [];
-
-    for (let i = 0; i < height; i++) {
-      const row: Array<Path> = [];
-      for (let j = 0; j < width; j++) {
-        const block: Path = { value: 0, position: { x: i, y: j } };
-
-        row.push(block);
-      }
-      tempGrid.push(row);
-    }
-    setGrid(tempGrid);
-    // factory.getAlgorithm("BFS")?.solve();
-  };
+  }, [grid, isRunning]);
 
   return (
     <div>
-      {showMenu ? (
+      {showMenu && (
         <div className="sticky">
           <Menu />
         </div>
-      ) : (
-        <></>
       )}
 
       <div style={{ position: "relative", top: 0, left: 0 }}>
@@ -72,11 +95,11 @@ function App() {
           <div style={{ display: "flex", gap: 3 }} key={i}>
             {row.map((item, j) => (
               <div
-                className={`box ${item.value === 1 ? "active" : ""}`}
-                onClick={(e) => handleClick(item, { x: i, y: j })}
+                className={`box`}
+                style={{ background: colorLoopUp.get(item.value) }}
+                onClick={(e) => handleClick(item)}
                 key={`${i},${j}`}
               >
-                {/* <span style={{ color: "black" }}>{`(${j}, ${i}) `}</span> */}
                 <span style={{ color: "black" }}>{`${item.value}`}</span>
               </div>
             ))}

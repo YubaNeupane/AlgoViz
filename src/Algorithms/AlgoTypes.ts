@@ -9,7 +9,7 @@ export interface Position {
 }
 
 interface IAlgorithm {
-  solve(): Array<Path>;
+  solve(path: Array<Array<Path>>): Path[];
 }
 
 export default IAlgorithm;
