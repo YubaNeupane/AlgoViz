@@ -1,8 +1,8 @@
 import { Path, Position } from "../Algorithms/AlgoTypes";
 
 export const makeGrid = (
-  width: number = 100,
-  height: number = 100
+  width: number = window.innerWidth / 60,
+  height: number = window.innerHeight / 60
 ): Array<Array<Path>> => {
   const tempGrid: Array<Array<Path>> = [];
 

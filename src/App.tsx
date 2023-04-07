@@ -17,17 +17,29 @@ const colorLoopUp: Map<number, string> = new Map<number, string>();
 
 colorLoopUp.set(0, "white");
 colorLoopUp.set(1, "yellow");
+colorLoopUp.set(2, "green");
+colorLoopUp.set(3, "blue");
 colorLoopUp.set(-1, "green");
 
 function App() {
   const [grid, setGrid] = useState<Array<Array<Path>>>(makeGrid());
+
+  const [startPosition, setStartPosition] = useState<Position | null>(null);
+  const [endPosition, setEndpoistion] = useState<Position | null>(null);
+
   const [showMenu, setShowMenu] = useState<boolean>(false);
   const [isRunning, setIsRunning] = useState<boolean>(false);
 
-  const handleClick = (item: Path) => {
+  const handleClick = (controlKeyPressed: boolean, item: Path) => {
     const c = [...grid];
     const value = c[item.position.x][item.position.y].value;
-    c[item.position.x][item.position.y].value = value == 1 ? 0 : 1;
+
+    if (controlKeyPressed) {
+      c[item.position.x][item.position.y].value = 2;
+      setStartPosition(item.position);
+    } else {
+      c[item.position.x][item.position.y].value = value == 1 ? 0 : 1;
+    }
     setGrid(c);
   };
 
@@ -49,7 +61,7 @@ function App() {
         grid[previousNode.position.x][previousNode.position.y].value = -1;
         grid[pos.x][pos.y].value = path[i].value;
         setGrid([...grid]);
-      }, i * 5);
+      }, i * 100);
 
       timeoutIds.push(timeout);
     }
@@ -97,7 +109,7 @@ function App() {
               <div
                 className={`box`}
                 style={{ background: colorLoopUp.get(item.value) }}
-                onClick={(e) => handleClick(item)}
+                onClick={(e) => handleClick(e.ctrlKey, item)}
                 key={`${i},${j}`}
               >
                 <span style={{ color: "black" }}>{`${item.value}`}</span>
