@@ -1,3 +1,4 @@
+import { BoardState } from "../utils/constants/DropdownValues";
 import IAlgorithm, { Path } from "./AlgoTypes";
 
 export class BFS implements IAlgorithm {
@@ -21,7 +22,7 @@ export class Random implements IAlgorithm {
         // });
 
         temp.push({
-          value: path[i][j].value == 1 ? 0 : 1,
+          value: BoardState.Looking,
           position: {
             x: i,
             y: j,

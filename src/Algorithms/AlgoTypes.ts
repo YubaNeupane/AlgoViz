@@ -1,6 +1,8 @@
+import { BoardState } from "../utils/constants/DropdownValues";
+
 export interface Path {
   position: Position;
-  value: number;
+  value: BoardState;
 }
 
 export interface Position {

@@ -1,33 +1,32 @@
 import { MouseEventHandler, useEffect, useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
 
+import Dropdown from "react-dropdown";
+import "react-dropdown/style.css";
 import "./App.css";
 import "./main.css";
 import Menu from "./components/Menu";
 import AlgoFactory from "./Algorithms/AlgoFractory";
 import { Path, Position } from "./Algorithms/AlgoTypes";
 import { clearAllTimeout, makeGrid } from "./utils";
+import colorLoopUp from "./utils/constants/ColorLookUp";
+import {
+  BoardState,
+  PlacementDropdownValues,
+} from "./utils/constants/DropdownValues";
 
 const factory: AlgoFactory = new AlgoFactory();
 
 const timeoutIds: number[] = [];
 
-const colorLoopUp: Map<number, string> = new Map<number, string>();
-
-colorLoopUp.set(0, "white");
-colorLoopUp.set(1, "yellow");
-colorLoopUp.set(2, "green");
-colorLoopUp.set(3, "blue");
-colorLoopUp.set(-1, "green");
-
 function App() {
   const [grid, setGrid] = useState<Array<Array<Path>>>(makeGrid());
+
+  const [currentPlacementState, setCurrentPlacementState] =
+    useState<BoardState | null>(null);
 
   const [startPosition, setStartPosition] = useState<Position | null>(null);
   const [endPosition, setEndpoistion] = useState<Position | null>(null);
 
-  const [showMenu, setShowMenu] = useState<boolean>(false);
   const [isRunning, setIsRunning] = useState<boolean>(false);
 
   const handleClick = (controlKeyPressed: boolean, item: Path) => {
@@ -38,8 +37,9 @@ function App() {
       c[item.position.x][item.position.y].value = 2;
       setStartPosition(item.position);
     } else {
-      c[item.position.x][item.position.y].value = value == 1 ? 0 : 1;
+      c[item.position.x][item.position.y].value = BoardState.Obstacle;
     }
+
     setGrid(c);
   };
 
@@ -58,7 +58,9 @@ function App() {
       const timeout = setTimeout(() => {
         const pos = path[i].position;
 
-        grid[previousNode.position.x][previousNode.position.y].value = -1;
+        grid[previousNode.position.x][previousNode.position.y].value =
+          BoardState.LookedAt;
+
         grid[pos.x][pos.y].value = path[i].value;
         setGrid([...grid]);
       }, i * 100);
@@ -71,9 +73,6 @@ function App() {
   useEffect(() => {
     const handleKeyPressed = (e: KeyboardEvent) => {
       switch (e.key) {
-        case "Escape":
-          setShowMenu((showMenu) => !showMenu);
-          break;
         case "Enter":
           const paths: Path[] = factory.getAlgorithm("random")?.solve(grid);
           showAnimation(paths);
@@ -96,11 +95,26 @@ function App() {
 
   return (
     <div>
-      {showMenu && (
-        <div className="sticky">
-          <Menu />
+      <div
+        style={{
+          marginBottom: 10,
+          flexDirection: "row",
+          display: "flex",
+          gap: 10,
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ width: 300 }}>
+          <Dropdown
+            options={PlacementDropdownValues}
+            onChange={({ value }) => console.log(value)}
+            placeholder="Select placement"
+          />
         </div>
-      )}
+        <div style={{ width: 300 }}>
+          <Dropdown options={["sad"]} placeholder="Select an Algorithm" />
+        </div>
+      </div>
 
       <div style={{ position: "relative", top: 0, left: 0 }}>
         {grid?.map((row, i) => (
