@@ -1,7 +1,5 @@
-import { ReactDropdownProps } from "react-dropdown";
-
 export enum BoardState {
-  Empty = -1,
+  Empty = 0,
   Start = 1,
   Obstacle = 2,
   End = 3,

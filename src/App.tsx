@@ -1,10 +1,10 @@
-import { MouseEventHandler, useEffect, useState } from "react";
+/* eslint-disable react/react-in-jsx-scope */
+import { useEffect, useState } from "react";
 
 import Dropdown from "react-dropdown";
 import "react-dropdown/style.css";
 import "./App.css";
 import "./main.css";
-import Menu from "./components/Menu";
 import AlgoFactory from "./Algorithms/AlgoFractory";
 import { Path, Position } from "./Algorithms/AlgoTypes";
 import { clearAllTimeout, makeGrid } from "./utils";
@@ -22,22 +22,50 @@ function App() {
   const [grid, setGrid] = useState<Array<Array<Path>>>(makeGrid());
 
   const [currentPlacementState, setCurrentPlacementState] =
-    useState<BoardState | null>(null);
+    useState<BoardState | null>(BoardState.Start);
 
   const [startPosition, setStartPosition] = useState<Position | null>(null);
   const [endPosition, setEndpoistion] = useState<Position | null>(null);
 
   const [isRunning, setIsRunning] = useState<boolean>(false);
 
+  const isPostionEqual = (
+    position: Position,
+    compare: Position | null
+  ): boolean => {
+    if (compare === null) return false;
+    return position.x === compare.x && position.y === compare.y;
+  };
+
   const handleClick = (controlKeyPressed: boolean, item: Path) => {
     const c = [...grid];
-    const value = c[item.position.x][item.position.y].value;
+    // const value = c[item.position.x][item.position.y].value;
 
-    if (controlKeyPressed) {
-      c[item.position.x][item.position.y].value = 2;
-      setStartPosition(item.position);
-    } else {
-      c[item.position.x][item.position.y].value = BoardState.Obstacle;
+    if (currentPlacementState === BoardState.Start) {
+      if (startPosition) {
+        c[startPosition.x][startPosition.y].value = BoardState.Empty;
+        c[item.position.x][item.position.y].value = BoardState.Start;
+        setStartPosition(item.position);
+      } else {
+        c[item.position.x][item.position.y].value = BoardState.Start;
+        setStartPosition(item.position);
+      }
+    } else if (currentPlacementState === BoardState.End) {
+      if (endPosition) {
+        c[endPosition.x][endPosition.y].value = BoardState.Empty;
+        c[item.position.x][item.position.y].value = BoardState.End;
+        setEndpoistion(item.position);
+      } else {
+        c[item.position.x][item.position.y].value = BoardState.End;
+        setEndpoistion(item.position);
+      }
+    } else if (currentPlacementState === BoardState.Obstacle) {
+      if (
+        !isPostionEqual(item.position, startPosition) &&
+        !isPostionEqual(item.position, endPosition)
+      ) {
+        c[item.position.x][item.position.y].value = BoardState.Obstacle;
+      }
     }
 
     setGrid(c);
@@ -74,8 +102,7 @@ function App() {
     const handleKeyPressed = (e: KeyboardEvent) => {
       switch (e.key) {
         case "Enter":
-          const paths: Path[] = factory.getAlgorithm("random")?.solve(grid);
-          showAnimation(paths);
+          showAnimation(factory.getAlgorithm("random")?.solve(grid));
           break;
         case "r":
         case "R":
@@ -107,7 +134,22 @@ function App() {
         <div style={{ width: 300 }}>
           <Dropdown
             options={PlacementDropdownValues}
-            onChange={({ value }) => console.log(value)}
+            value={"Start"}
+            onChange={({ label }) => {
+              switch (label) {
+                case "Obstacle":
+                  setCurrentPlacementState(BoardState.Obstacle);
+                  break;
+                case "Start":
+                  setCurrentPlacementState(BoardState.Start);
+                  break;
+                case "End":
+                  setCurrentPlacementState(BoardState.End);
+                  break;
+                default:
+                  setCurrentPlacementState(BoardState.Empty);
+              }
+            }}
             placeholder="Select placement"
           />
         </div>
